@@ -7,8 +7,10 @@ import { useLazyQuery, gql } from '@apollo/client'
 import { authToken } from '../../helpers/authentication'
 import { albumPathQuery } from './__generated__/albumPathQuery'
 import useDelay from '../../hooks/useDelay'
+import { API_ENDPOINT } from '../../apolloClient'
 
 import { ReactComponent as GearIcon } from './icons/gear.svg'
+import { ReactComponent as DownloadIcon } from './icons/download.svg'
 import { tailwindClassNames } from '../../helpers/utils'
 import { buttonStyles } from '../../primitives/form/Input'
 
@@ -63,6 +65,12 @@ const AlbumTitle = ({ album, disableLink = false }: AlbumTitleProps) => {
     }
   }, [album])
 
+  let token: RegExpMatchArray | null = null
+  if (authToken() == null) {
+    // Get share token if not authorized
+    token = location.pathname.match(/^\/share\/([\d\w]+)(\/?.*)$/)
+  }
+
   const delay = useDelay(200, [album])
 
   if (!album) {
@@ -115,6 +123,18 @@ const AlbumTitle = ({ album, disableLink = false }: AlbumTitleProps) => {
           <GearIcon />
         </button>
       )}
+      <button
+        title="Album download"
+        aria-label="Album download"
+        className={tailwindClassNames(buttonStyles({}), 'px-2 py-2 ml-2')}
+        onClick={() => {
+          location.href =
+            `${API_ENDPOINT}/download/album/${album.id}/original` +
+            (authToken() ? '' : `?token=${token![1]}`)
+        }}
+      >
+        <DownloadIcon />
+      </button>
     </div>
   )
 }
